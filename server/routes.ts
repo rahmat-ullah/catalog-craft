@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -33,6 +34,9 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session middleware
   app.use(getSession());
+  
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {
@@ -282,6 +286,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get attachment content (for MD viewer)
+  app.get('/api/attachments/:id', async (req, res) => {
+    try {
+      const attachment = await storage.getAttachment(req.params.id);
+      if (!attachment) {
+        return res.status(404).json({ message: "Attachment not found" });
+      }
+      res.json(attachment);
+    } catch (error) {
+      console.error("Error fetching attachment:", error);
+      res.status(500).json({ message: "Failed to fetch attachment" });
+    }
+  });
+
   // Blog routes
   app.get('/api/blog/categories', async (req, res) => {
     try {
@@ -449,13 +467,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Determine file type
+      const isMarkdown = req.file.originalname.toLowerCase().endsWith('.md') || 
+                        req.file.mimetype === 'text/markdown' ||
+                        req.file.mimetype === 'text/x-markdown';
+      const isPdf = req.file.mimetype === 'application/pdf';
+      
+      if (!isMarkdown && !isPdf) {
+        return res.status(400).json({ message: "Only PDF and Markdown files are allowed" });
+      }
+
+      let content = null;
+      const fileType = isMarkdown ? 'md' : 'pdf';
+      
+      // For MD files, read the content
+      if (isMarkdown) {
+        try {
+          content = fs.readFileSync(req.file.path, 'utf8');
+        } catch (error) {
+          console.error("Error reading MD file:", error);
+        }
+      }
+
       const attachment = await storage.createAttachment({
         productId: req.params.productId,
         filename: req.file.filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
+        fileType,
         size: req.file.size,
         url: `uploads/${req.file.filename}`,
+        content,
       });
 
       res.status(201).json(attachment);

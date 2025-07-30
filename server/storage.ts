@@ -21,6 +21,7 @@ import {
   type BlogPost,
   type InsertBlogPost,
 } from "@shared/schema";
+import { generateSlug } from "@shared/utils";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -469,9 +470,20 @@ export class MemStorage implements IStorage {
 
   async createProduct(productData: InsertProduct): Promise<Product> {
     const id = randomUUID();
+    // Auto-generate slug if not provided
+    const slug = productData.slug || generateSlug(productData.name);
+    
+    // Ensure slug is unique
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (Array.from(this.products.values()).some(p => p.slug === uniqueSlug)) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    
     const product: Product = {
       id,
-      slug: productData.slug,
+      slug: uniqueSlug,
       name: productData.name,
       description: productData.description || null,
       categoryId: productData.categoryId,

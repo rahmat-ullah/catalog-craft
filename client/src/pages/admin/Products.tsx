@@ -39,11 +39,11 @@ import {
 import { Plus, Edit, Trash2, Eye, Upload, Star } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProductSchema, type InsertProduct, type Product } from "@shared/schema";
+import { insertProductSchema, type InsertProduct, type Product, type Attachment } from "@shared/schema";
 import { z } from "zod";
+import FileUpload from "@/components/FileUpload";
 
 const productFormSchema = insertProductSchema.extend({
-  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   tags: z.string().optional(),
 });
 
@@ -54,7 +54,7 @@ export default function AdminProducts() {
   const { isAuthenticated, isLoading } = useAuth();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   const { data: domains } = useQuery({
     queryKey: ['/api/domains'],
@@ -244,7 +244,6 @@ export default function AdminProducts() {
     form.reset({
       categoryId: product.categoryId,
       name: product.name,
-      slug: product.slug,
       subtitle: product.subtitle || "",
       description: product.description || "",
       thumbnail: product.thumbnail || "",
@@ -254,45 +253,18 @@ export default function AdminProducts() {
       isFeatured: product.isFeatured || false,
       isActive: product.isActive ?? true,
     });
+    // Load existing attachments if editing
+    if ((product as any).attachments) {
+      setAttachments((product as any).attachments);
+    } else {
+      setAttachments([]);
+    }
     setIsDialogOpen(true);
   };
 
   const handleDelete = (product: Product) => {
     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
       deleteMutation.mutate(product.id);
-    }
-  };
-
-  const handleFileUpload = async (productId: string, file: File) => {
-    try {
-      setUploadingFile(true);
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch(`/api/admin/products/${productId}/attachments`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      toast({
-        title: "Success",
-        description: "File uploaded successfully",
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload file",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingFile(false);
     }
   };
 
@@ -388,29 +360,16 @@ export default function AdminProducts() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="slug">Slug</Label>
-                      <Input
-                        id="slug"
-                        {...form.register('slug')}
-                        placeholder="claude-dev-assistant"
-                      />
-                      {form.formState.errors.slug && (
-                        <p className="text-sm text-destructive mt-1">
-                          {form.formState.errors.slug.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="subtitle">Subtitle</Label>
-                      <Input
-                        id="subtitle"
-                        {...form.register('subtitle')}
-                        placeholder="Advanced code generation assistant"
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="subtitle">Subtitle</Label>
+                    <Input
+                      id="subtitle"
+                      {...form.register('subtitle')}
+                      placeholder="Advanced code generation assistant"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Slug will be auto-generated from the product name
+                    </p>
                   </div>
 
                   <div>
@@ -487,6 +446,17 @@ export default function AdminProducts() {
                       <Label htmlFor="isActive">Active</Label>
                     </div>
                   </div>
+
+                  {/* File Upload Section - only show for existing products */}
+                  {editingProduct && (
+                    <div className="border-t pt-4">
+                      <FileUpload
+                        productId={editingProduct.id}
+                        attachments={attachments}
+                        onAttachmentsChange={setAttachments}
+                      />
+                    </div>
+                  )}
 
                   <div className="flex gap-2 pt-4">
                     <Button 

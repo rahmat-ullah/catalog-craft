@@ -91,8 +91,10 @@ export const attachments = pgTable("attachments", {
   filename: varchar("filename").notNull(),
   originalName: varchar("original_name").notNull(),
   mimeType: varchar("mime_type").notNull(),
+  fileType: varchar("file_type").notNull(), // 'pdf', 'md'
   size: integer("size").notNull(),
   url: varchar("url").notNull(),
+  content: text("content"), // Store MD file content for viewer
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
@@ -163,6 +165,8 @@ export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  slug: z.string().optional(), // Make slug optional for auto-generation
 });
 
 export const insertAttachmentSchema = createInsertSchema(attachments).omit({
