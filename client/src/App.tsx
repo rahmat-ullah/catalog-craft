@@ -18,12 +18,15 @@ import AdminDomains from "@/pages/admin/Domains";
 import AdminCategories from "@/pages/admin/Categories";
 import AdminProducts from "@/pages/admin/Products";
 import AdminBlogPosts from "@/pages/admin/BlogPosts";
+import AdminUsers from "@/pages/admin/Users";
+import Login from "@/pages/Login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
+      <Route path="/login" component={Login} />
       {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
@@ -46,6 +49,7 @@ function Router() {
           <Route path="/admin/categories" component={AdminCategories} />
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/blog" component={AdminBlogPosts} />
+          <Route path="/admin/users" component={AdminUsers} />
         </>
       )}
       <Route component={NotFound} />

@@ -4,9 +4,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { getSession, requireAuth, requireAdmin, authenticateUser, hashPassword } from "./auth";
 import { z } from "zod";
-import { insertDomainSchema, insertCategorySchema, insertProductSchema, insertBlogCategorySchema, insertBlogPostSchema } from "@shared/schema";
+import { loginSchema, insertUserSchema, insertDomainSchema, insertCategorySchema, insertProductSchema, insertBlogCategorySchema, insertBlogPostSchema, UserRole, type User } from "@shared/schema";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -31,18 +31,119 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Session middleware
+  app.use(getSession());
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.post('/api/auth/login', async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      const { username, password } = loginSchema.parse(req.body);
+      
+      const user = await authenticateUser(username, password);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      (req.session as any).userId = user.id;
+      res.json({ user: { ...user, passwordHash: undefined } });
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      console.error("Login error:", error);
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
+  app.get('/api/auth/user', requireAuth, async (req, res) => {
+    const user = req.user!;
+    // Remove password hash from response
+    const userResponse = { ...user };
+    delete (userResponse as any).passwordHash;
+    res.json(userResponse);
+  });
+
+  // User management routes (Admin only)
+  app.get('/api/users', requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const usersWithoutPasswords = users.map(({ passwordHash, ...user }) => user);
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/users', requireAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username or email already exists
+      const existingUser = await storage.getUserByUsername(userData.username) || 
+                          await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username or email already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await hashPassword(userData.passwordHash);
+      
+      const user = await storage.createUser({
+        username: userData.username,
+        email: userData.email,
+        passwordHash: hashedPassword,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        role: userData.role || 'user',
+        isActive: userData.isActive !== false,
+      });
+      
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  });
+
+  app.put('/api/users/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      // If password is being updated, hash it
+      if (updateData.passwordHash) {
+        updateData.passwordHash = await hashPassword(updateData.passwordHash);
+      }
+      
+      const user = await storage.updateUser(id, updateData);
+      const { passwordHash: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(400).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete('/api/users/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Prevent admin from deleting themselves
+      if (req.user && req.user.id === id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(400).json({ message: "Failed to delete user" });
     }
   });
 
@@ -219,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin API routes (protected)
 
   // Domain admin routes
-  app.post('/api/admin/domains', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/domains', requireAdmin, async (req, res) => {
     try {
       const validation = insertDomainSchema.safeParse(req.body);
       if (!validation.success) {
@@ -234,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/domains/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/domains/:id', requireAdmin, async (req, res) => {
     try {
       const validation = insertDomainSchema.partial().safeParse(req.body);
       if (!validation.success) {
@@ -249,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/domains/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/domains/:id', requireAdmin, async (req, res) => {
     try {
       await storage.deleteDomain(req.params.id);
       res.status(204).send();
@@ -260,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Category admin routes
-  app.post('/api/admin/categories', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/categories', requireAdmin, async (req, res) => {
     try {
       const validation = insertCategorySchema.safeParse(req.body);
       if (!validation.success) {
@@ -275,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/categories/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/categories/:id', requireAdmin, async (req, res) => {
     try {
       const validation = insertCategorySchema.partial().safeParse(req.body);
       if (!validation.success) {
@@ -290,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/categories/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
     try {
       await storage.deleteCategory(req.params.id);
       res.status(204).send();
@@ -301,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product admin routes
-  app.post('/api/admin/products', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/products', requireAdmin, async (req, res) => {
     try {
       const validation = insertProductSchema.safeParse(req.body);
       if (!validation.success) {
@@ -316,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/products/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
     try {
       const validation = insertProductSchema.partial().safeParse(req.body);
       if (!validation.success) {
@@ -331,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/products/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
     try {
       await storage.deleteProduct(req.params.id);
       res.status(204).send();
@@ -342,7 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload route
-  app.post('/api/admin/products/:productId/attachments', isAuthenticated, upload.single('file'), async (req, res) => {
+  app.post('/api/admin/products/:productId/attachments', requireAdmin, upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -364,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/attachments/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/admin/attachments/:id', requireAdmin, async (req, res) => {
     try {
       const attachment = await storage.getAttachment(req.params.id);
       if (attachment) {
@@ -384,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Blog admin routes
-  app.post('/api/admin/blog/categories', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/blog/categories', requireAdmin, async (req, res) => {
     try {
       const validation = insertBlogCategorySchema.safeParse(req.body);
       if (!validation.success) {
@@ -399,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/blog/posts', isAuthenticated, async (req, res) => {
+  app.post('/api/admin/blog/posts', requireAdmin, async (req, res) => {
     try {
       const validation = insertBlogPostSchema.safeParse(req.body);
       if (!validation.success) {
@@ -414,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/blog/posts/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/admin/blog/posts/:id', requireAdmin, async (req, res) => {
     try {
       const validation = insertBlogPostSchema.partial().safeParse(req.body);
       if (!validation.success) {

@@ -24,9 +24,15 @@ import {
 import { randomUUID } from "crypto";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations for local authentication
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>): Promise<User>;
+  updateUser(id: string, user: Partial<User>): Promise<User>;
+  updateUserLastLogin(id: string): Promise<void>;
+  deleteUser(id: string): Promise<void>;
+  getAllUsers(): Promise<User[]>;
 
   // Domain operations
   getDomains(): Promise<Domain[]>;
@@ -90,6 +96,27 @@ export class MemStorage implements IStorage {
 
   constructor() {
     this.initializeSampleData();
+    this.initializeDefaultAdmin();
+  }
+
+  private async initializeDefaultAdmin() {
+    // Check if admin user already exists
+    const existingAdmin = await this.getUserByUsername('maruf');
+    if (!existingAdmin) {
+      const bcrypt = await import('bcryptjs');
+      const hashedPassword = await bcrypt.hash('Mnbvcxz7500', 12);
+      
+      await this.createUser({
+        username: 'maruf',
+        email: 'mdrahmatullahmaruf@gmail.com',
+        passwordHash: hashedPassword,
+        firstName: 'Maruf',
+        lastName: 'Rahman',
+        profileImageUrl: null,
+        role: 'admin',
+        isActive: true,
+      });
+    }
   }
 
   private initializeSampleData() {
@@ -254,32 +281,61 @@ export class MemStorage implements IStorage {
     sampleBlogPosts.forEach(post => this.blogPosts.set(post.id, post));
   }
 
-  // User operations
+  // User operations for local authentication
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const existingUser = Array.from(this.users.values()).find(user => user.email === userData.email);
-    
-    if (existingUser) {
-      const updatedUser = { ...existingUser, ...userData, updatedAt: new Date() };
-      this.users.set(existingUser.id, updatedUser);
-      return updatedUser;
-    } else {
-      const id = randomUUID();
-      const user: User = { 
-        id, 
-        email: userData.email || null,
-        firstName: userData.firstName || null,
-        lastName: userData.lastName || null,
-        profileImageUrl: userData.profileImageUrl || null,
-        createdAt: new Date(), 
-        updatedAt: new Date() 
-      };
-      this.users.set(id, user);
-      return user;
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLoginAt'>): Promise<User> {
+    const id = randomUUID();
+    const user: User = {
+      id,
+      ...userData,
+      lastLoginAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: string, userData: Partial<User>): Promise<User> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      throw new Error('User not found');
     }
+    
+    const updatedUser = {
+      ...existingUser,
+      ...userData,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserLastLogin(id: string): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.lastLoginAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    this.users.delete(id);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
   // Domain operations

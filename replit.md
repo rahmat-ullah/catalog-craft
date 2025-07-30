@@ -48,10 +48,12 @@ The application uses PostgreSQL with the following main entities:
 - **Attachments**: File management for uploaded content
 
 ### Authentication System
-- **Provider**: Replit Auth (OpenID Connect)
+- **Provider**: Custom Local Authentication with bcrypt password hashing
 - **Session Management**: Express sessions with PostgreSQL storage
-- **Security**: HTTPS-only cookies, CSRF protection
-- **User Flow**: Automatic redirects for unauthenticated users
+- **User Roles**: Admin, Editor, Moderator, User with role-based access control
+- **Security**: HTTPS-only cookies, password hashing, role-based route protection
+- **Default Admin**: Username "maruf", password "Mnbvcxz7500", email "mdrahmatullahmaruf@gmail.com"
+- **User Management**: Admin can create, edit, delete users and assign roles
 
 ## Data Flow
 

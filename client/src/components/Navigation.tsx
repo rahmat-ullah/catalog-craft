@@ -107,17 +107,26 @@ export default function Navigation() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => window.location.href = '/api/logout'}>
+                  <DropdownMenuItem onClick={async () => {
+                    try {
+                      await fetch('/api/auth/logout', { method: 'POST' });
+                      window.location.href = '/';
+                    } catch (error) {
+                      console.error('Logout failed:', error);
+                    }
+                  }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => window.location.href = '/api/login'} className="gradient-bg">
-                <User className="h-4 w-4 mr-2" />
-                Admin Login
-              </Button>
+              <Link href="/login">
+                <Button className="gradient-bg">
+                  <User className="h-4 w-4 mr-2" />
+                  Admin Login
+                </Button>
+              </Link>
             )}
           </div>
 
