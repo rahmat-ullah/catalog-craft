@@ -49,6 +49,15 @@ export default function Navigation() {
             <Link href="/" className={`transition-colors ${location === '/' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
               Domains
             </Link>
+            <Link href="/agents" className={`transition-colors ${location === '/agents' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
+              CLI Agents
+            </Link>
+            <Link href="/mcp" className={`transition-colors ${location === '/mcp' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
+              MCP Servers
+            </Link>
+            <Link href="/tools" className={`transition-colors ${location === '/tools' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
+              Tools
+            </Link>
             <Link href="/blog" className={`transition-colors ${location === '/blog' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
               Blog
             </Link>
@@ -158,6 +167,15 @@ export default function Navigation() {
             <div className="flex flex-col space-y-2">
               <Link href="/" className="block py-2 text-foreground/70 hover:text-foreground">
                 Domains
+              </Link>
+              <Link href="/agents" className="block py-2 text-foreground/70 hover:text-foreground">
+                CLI Agents
+              </Link>
+              <Link href="/mcp" className="block py-2 text-foreground/70 hover:text-foreground">
+                MCP Servers
+              </Link>
+              <Link href="/tools" className="block py-2 text-foreground/70 hover:text-foreground">
+                Tools
               </Link>
               <Link href="/blog" className="block py-2 text-foreground/70 hover:text-foreground">
                 Blog

@@ -2,6 +2,8 @@ import Layout from "@/components/Layout";
 import HeroSection from "@/components/HeroSection";
 import FeaturedResources from "@/components/FeaturedResources";
 import BlogPreview from "@/components/BlogPreview";
+import ShowcaseSection from "@/components/ShowcaseSection";
+import Footer from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import DomainCard from "@/components/DomainCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,6 +44,7 @@ export default function Landing() {
       </section>
 
       <FeaturedResources />
+      <ShowcaseSection />
       <BlogPreview />
       
       {/* Newsletter Section */}
@@ -79,6 +82,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      
+      <Footer />
     </Layout>
   );
 }
