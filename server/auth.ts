@@ -22,8 +22,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Allow non-HTTPS for development
       maxAge: sessionTtl,
+      sameSite: 'lax',
     },
   });
 }
@@ -54,11 +55,12 @@ export async function authenticateUser(username: string, password: string): Prom
 }
 
 export const requireAuth: RequestHandler = async (req, res, next) => {
-  if (!req.session?.userId) {
+  const session = req.session as any;
+  if (!session?.userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   
-  const user = await storage.getUser(req.session.userId);
+  const user = await storage.getUser(session.userId);
   if (!user || !user.isActive) {
     req.session.destroy(() => {});
     return res.status(401).json({ message: "Unauthorized" });
@@ -70,14 +72,22 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
 
 export const requireRole = (roles: string[]): RequestHandler => {
   return async (req, res, next) => {
-    if (!req.user) {
+    const session = req.session as any;
+    if (!session || !session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     
-    if (!roles.includes(req.user.role)) {
+    const user = await storage.getUser(session.userId);
+    if (!user || !user.isActive) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    if (!roles.includes(user.role)) {
       return res.status(403).json({ message: "Forbidden" });
     }
     
+    req.user = user;
     next();
   };
 };
