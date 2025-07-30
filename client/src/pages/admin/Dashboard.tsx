@@ -134,7 +134,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -213,6 +213,34 @@ export default function AdminDashboard() {
                     <Button size="sm" variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
                       New Product
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Manage Users
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Create and manage user accounts with different roles
+                </p>
+                <div className="flex gap-2">
+                  <Link href="/admin/users">
+                    <Button size="sm">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage
+                    </Button>
+                  </Link>
+                  <Link href="/admin/users">
+                    <Button size="sm" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New User
                     </Button>
                   </Link>
                 </div>
