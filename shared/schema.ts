@@ -75,6 +75,7 @@ export const products = pgTable("products", {
   subtitle: varchar("subtitle"),
   description: text("description"),
   thumbnail: varchar("thumbnail"),
+  author: varchar("author").notNull().default("Rahmat Ullah"),
   tags: text("tags").array(),
   rating: integer("rating").default(0),
   downloadCount: integer("download_count").default(0),

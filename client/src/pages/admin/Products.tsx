@@ -107,6 +107,7 @@ export default function AdminProducts() {
       subtitle: "",
       description: "",
       thumbnail: "",
+      author: "Rahmat Ullah",
       tags: "",
       rating: 0,
       downloadCount: 0,
@@ -131,7 +132,20 @@ export default function AdminProducts() {
         description: "Product created successfully",
       });
       setIsDialogOpen(false);
-      form.reset();
+      form.reset({
+        categoryId: "",
+        name: "",
+        slug: "",
+        subtitle: "",
+        description: "",
+        thumbnail: "",
+        author: "Rahmat Ullah",
+        tags: "",
+        rating: 0,
+        downloadCount: 0,
+        isFeatured: false,
+        isActive: true,
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -171,7 +185,20 @@ export default function AdminProducts() {
       });
       setIsDialogOpen(false);
       setEditingProduct(null);
-      form.reset();
+      form.reset({
+        categoryId: "",
+        name: "",
+        slug: "",
+        subtitle: "",
+        description: "",
+        thumbnail: "",
+        author: "Rahmat Ullah",
+        tags: "",
+        rating: 0,
+        downloadCount: 0,
+        isFeatured: false,
+        isActive: true,
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -247,6 +274,7 @@ export default function AdminProducts() {
       subtitle: product.subtitle || "",
       description: product.description || "",
       thumbnail: product.thumbnail || "",
+      author: ((product as any).author) || "Rahmat Ullah",
       tags: product.tags?.join(', ') || "",
       rating: product.rating || 0,
       downloadCount: product.downloadCount || 0,
@@ -360,17 +388,29 @@ export default function AdminProducts() {
                     </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="subtitle">Subtitle</Label>
-                    <Input
-                      id="subtitle"
-                      {...form.register('subtitle')}
-                      placeholder="Advanced code generation assistant"
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Slug will be auto-generated from the product name
-                    </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="subtitle">Subtitle</Label>
+                      <Input
+                        id="subtitle"
+                        {...form.register('subtitle')}
+                        placeholder="Advanced code generation assistant"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="author">Author</Label>
+                      <Input
+                        id="author"
+                        {...form.register('author')}
+                        placeholder="Rahmat Ullah"
+                      />
+                    </div>
                   </div>
+
+                  <p className="text-sm text-muted-foreground">
+                    Slug will be auto-generated from the product name
+                  </p>
 
                   <div>
                     <Label htmlFor="description">Description</Label>
@@ -498,6 +538,7 @@ export default function AdminProducts() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Author</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Downloads</TableHead>
                       <TableHead>Status</TableHead>
@@ -532,6 +573,11 @@ export default function AdminProducts() {
                             <div className="text-xs text-muted-foreground mt-1">
                               {(product as any).domainName}
                             </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm font-medium">
+                            {((product as any).author) || "Rahmat Ullah"}
                           </div>
                         </TableCell>
                         <TableCell>
