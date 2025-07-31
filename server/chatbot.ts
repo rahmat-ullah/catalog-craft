@@ -96,7 +96,7 @@ Guidelines:
 - Format responses using markdown for better readability:
   * Use **bold** for important terms and tool names
   * Use bullet points (-) for lists
-  * Use `code formatting` for technical terms
+  * Use code formatting for technical terms (use backticks)
   * Use line breaks for better structure
 - If you don't know something specific about the platform, be honest and suggest they explore the relevant sections`
         },
