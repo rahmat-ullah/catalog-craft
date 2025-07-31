@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://ai-catalog-platform.replit.app/sitemap.xml
+
+# Allow search engines to crawl all content
+Allow: /domains/
+Allow: /categories/
+Allow: /products/
+Allow: /tools/
+Allow: /blog/
+
+# Block admin areas from search engines
+Disallow: /admin/
+Disallow: /login
+
+# Cache directive
+Crawl-delay: 1

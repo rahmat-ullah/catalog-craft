@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
+import { generateSitemap, generateProductStructuredData, generateBlogPostStructuredData } from "./seo";
 import { getSession, requireAuth, requireAdmin, authenticateUser, hashPassword } from "./auth";
 import { z } from "zod";
 import { loginSchema, insertUserSchema, insertDomainSchema, insertCategorySchema, insertProductSchema, insertBlogCategorySchema, insertBlogPostSchema, insertNavigationItemSchema, UserRole, type User } from "@shared/schema";
@@ -37,6 +38,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Serve uploaded files statically
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+  // SEO Routes
+  app.get('/sitemap.xml', async (req, res) => {
+    try {
+      const sitemap = await generateSitemap();
+      res.setHeader('Content-Type', 'application/xml');
+      res.send(sitemap);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).json({ message: "Failed to generate sitemap" });
+    }
+  });
+
+  app.get('/robots.txt', (req, res) => {
+    res.setHeader('Content-Type', 'text/plain');
+    res.sendFile(path.join(process.cwd(), 'client/public/robots.txt'));
+  });
 
   // Auth routes
   app.post('/api/auth/login', async (req, res) => {

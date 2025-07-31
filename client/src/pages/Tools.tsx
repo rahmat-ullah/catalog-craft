@@ -7,8 +7,30 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "wouter";
 import { Search, Star, Download, Tag, ExternalLink } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 export default function Tools() {
+  // SEO optimization
+  useSEO({
+    title: "AI Tools Directory - Browse & Discover AI Applications",
+    description: "Explore our comprehensive directory of AI tools and applications. Find the best AI solutions for development, productivity, automation, and more. Discover cutting-edge technologies and resources.",
+    canonical: "https://ai-catalog-platform.replit.app/tools",
+    keywords: "AI tools directory, artificial intelligence applications, AI software, machine learning tools, development tools, productivity tools, automation software, AI resources",
+    type: "website",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "AI Tools Directory",
+      "description": "Comprehensive directory of AI tools and applications for developers and businesses",
+      "url": "https://ai-catalog-platform.replit.app/tools",
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "AI Tools Collection",
+        "description": "Curated collection of AI tools and applications"
+      }
+    }
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 

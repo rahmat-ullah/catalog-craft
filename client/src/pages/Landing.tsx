@@ -4,11 +4,33 @@ import FeaturedResources from "@/components/FeaturedResources";
 import BlogPreview from "@/components/BlogPreview";
 import ShowcaseSection from "@/components/ShowcaseSection";
 import Footer from "@/components/Footer";
+import { useSEO } from "@/hooks/useSEO";
 import { useQuery } from "@tanstack/react-query";
 import DomainCard from "@/components/DomainCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Landing() {
+  // SEO optimization
+  useSEO({
+    title: "AI Catalog Platform - Discover the Best AI Tools & Resources",
+    description: "Discover and explore the latest AI tools, development resources, and cutting-edge technologies. Find the perfect AI solutions for your projects with our comprehensive catalog platform.",
+    canonical: "https://ai-catalog-platform.replit.app/",
+    keywords: "AI tools, artificial intelligence, machine learning, development tools, AI catalog, tech resources, AI platforms, coding tools, automation tools, ChatGPT, Claude, OpenAI, AI applications",
+    type: "website",
+    structuredData: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "AI Catalog Platform",
+      "description": "Discover and explore the latest AI tools, development resources, and cutting-edge technologies",
+      "url": "https://ai-catalog-platform.replit.app/",
+      "mainEntity": {
+        "@type": "ItemList",
+        "name": "Featured AI Tools",
+        "description": "Curated collection of the best AI tools and resources"
+      }
+    }
+  });
+
   const { data: domains, isLoading } = useQuery({
     queryKey: ['/api/domains'],
   });
