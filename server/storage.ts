@@ -893,6 +893,7 @@ Professional application performance monitoring and optimization tool with AI-po
       rating: productData.rating || null,
       downloadCount: productData.downloadCount || null,
       isFeatured: productData.isFeatured || null,
+      author: productData.author || "Unknown",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -931,6 +932,7 @@ Professional application performance monitoring and optimization tool with AI-po
     const attachment: Attachment = {
       id,
       ...attachmentData,
+      content: attachmentData.content || null,
       uploadedAt: new Date(),
     };
     this.attachments.set(id, attachment);
