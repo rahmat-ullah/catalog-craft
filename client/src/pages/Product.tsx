@@ -13,6 +13,35 @@ import { useState } from "react";
 export default function Product() {
   const { slug } = useParams();
   const [viewerAttachment, setViewerAttachment] = useState<any>(null);
+
+  // Simple markdown renderer (basic implementation)
+  const renderMarkdown = (content: string) => {
+    if (!content) return '';
+    
+    return content
+      // Headers
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-6 mb-3">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-8 mb-4">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-10 mb-6">$1</h1>')
+      // Bold and italic
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-4 rounded-md overflow-x-auto my-6 text-sm"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code class="bg-muted px-2 py-1 rounded text-sm font-mono">$1</code>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">$1</a>')
+      // Lists
+      .replace(/^\- (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
+      .replace(/^(\d+)\. (.*$)/gm, '<li class="ml-4 mb-1">$1. $2</li>')
+      // Line breaks and paragraphs
+      .replace(/\n\n/g, '</p><p class="mb-4">')
+      .replace(/\n/g, '<br/>')
+      // Wrap in paragraphs
+      .replace(/^(?!<[h|l|p|c])(.+)$/gm, '<p class="mb-4">$1</p>')
+      // Clean up empty paragraphs
+      .replace(/<p class="mb-4"><\/p>/g, '');
+  };
   
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${slug}`],
@@ -63,7 +92,7 @@ export default function Product() {
     );
   }
 
-  const rating = (product.rating || 0) / 10; // Convert to 5-star scale
+  const rating = ((product as any)?.rating || 0) / 10; // Convert to 5-star scale
 
   return (
     <Layout>
@@ -77,11 +106,11 @@ export default function Product() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink href={`/category/${product.categoryId}`}>Category</BreadcrumbLink>
+                <BreadcrumbLink href={`/category/${(product as any)?.categoryId}`}>Category</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <span className="font-medium">{product.name}</span>
+                <span className="font-medium">{(product as any)?.name}</span>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -90,11 +119,11 @@ export default function Product() {
             {/* Main Content */}
             <div className="lg:col-span-2">
               {/* Product Image */}
-              {product.thumbnail && (
+              {(product as any)?.thumbnail && (
                 <div className="aspect-video w-full overflow-hidden rounded-2xl mb-8">
                   <img
-                    src={product.thumbnail}
-                    alt={product.name}
+                    src={(product as any).thumbnail}
+                    alt={(product as any).name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -103,7 +132,7 @@ export default function Product() {
               {/* Product Header */}
               <div className="mb-8">
                 <div className="flex items-center gap-4 mb-4">
-                  {product.tags && product.tags.map((tag) => (
+                  {(product as any)?.tags && (product as any).tags.map((tag: any) => (
                     <Badge key={tag} variant="secondary">
                       <Tag className="h-3 w-3 mr-1" />
                       {tag}
@@ -117,36 +146,39 @@ export default function Product() {
                   )}
                 </div>
                 
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">{product.name}</h1>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">{(product as any)?.name}</h1>
                 
-                {product.subtitle && (
+                {(product as any)?.subtitle && (
                   <p className="text-xl text-muted-foreground mb-6">
-                    {product.subtitle}
+                    {(product as any).subtitle}
                   </p>
                 )}
               </div>
 
               {/* Product Description */}
-              {product.description && (
+              {(product as any)?.description && (
                 <Card className="glass-card mb-8">
                   <CardContent className="p-8">
                     <h2 className="text-2xl font-bold mb-4">Description</h2>
                     <div className="prose prose-neutral dark:prose-invert max-w-none">
-                      <p className="text-muted-foreground leading-relaxed">
-                        {product.description}
-                      </p>
+                      <div 
+                        className="text-muted-foreground leading-relaxed"
+                        dangerouslySetInnerHTML={{ 
+                          __html: renderMarkdown((product as any).description) 
+                        }}
+                      />
                     </div>
                   </CardContent>
                 </Card>
               )}
 
               {/* Attachments */}
-              {product.attachments && product.attachments.length > 0 && (
+              {(product as any)?.attachments && (product as any).attachments.length > 0 && (
                 <Card className="glass-card">
                   <CardContent className="p-8">
                     <h2 className="text-2xl font-bold mb-6">Downloads & Resources</h2>
                     <div className="space-y-4">
-                      {product.attachments.map((attachment: any) => {
+                      {(product as any).attachments.map((attachment: any) => {
                         const getFileIcon = (fileType: string) => {
                           return fileType === 'pdf' ? 
                             <File className="w-5 h-5 text-red-500" /> : 
@@ -216,7 +248,7 @@ export default function Product() {
                       <span className="text-muted-foreground">Downloads</span>
                       <div className="flex items-center">
                         <Download className="h-4 w-4 mr-1" />
-                        <span className="font-medium">{product.downloadCount || 0}</span>
+                        <span className="font-medium">{(product as any)?.downloadCount || 0}</span>
                       </div>
                     </div>
                     {rating > 0 && (
@@ -233,7 +265,7 @@ export default function Product() {
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
                         <span className="font-medium">
-                          {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'Recently'}
+                          {(product as any)?.createdAt ? new Date((product as any).createdAt).toLocaleDateString() : 'Recently'}
                         </span>
                       </div>
                     </div>
@@ -242,12 +274,12 @@ export default function Product() {
               </Card>
 
               {/* Tags Card */}
-              {product.tags && product.tags.length > 0 && (
+              {(product as any)?.tags && (product as any).tags.length > 0 && (
                 <Card className="glass-card">
                   <CardContent className="p-6">
                     <h3 className="font-semibold mb-4">Tags</h3>
                     <div className="flex flex-wrap gap-2">
-                      {product.tags.map((tag) => (
+                      {(product as any).tags.map((tag: any) => (
                         <Badge key={tag} variant="outline">
                           {tag}
                         </Badge>

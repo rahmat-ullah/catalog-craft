@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Eye, Upload, Star } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Upload, Star, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema, type InsertProduct, type Product, type Attachment } from "@shared/schema";
@@ -55,6 +55,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [showDescriptionPreview, setShowDescriptionPreview] = useState(false);
 
   const { data: domains } = useQuery({
     queryKey: ['/api/domains'],
@@ -300,6 +301,36 @@ export default function AdminProducts() {
     setAttachments([]);
     setEditingProduct(null);
     setIsDialogOpen(false);
+    setShowDescriptionPreview(false);
+  };
+
+  // Simple markdown renderer (basic implementation)
+  const renderMarkdown = (content: string) => {
+    if (!content) return '';
+    
+    return content
+      // Headers
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-6 mb-3">$1</h3>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-8 mb-4">$1</h2>')
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-10 mb-6">$1</h1>')
+      // Bold and italic
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-muted p-4 rounded-md overflow-x-auto my-6 text-sm"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code class="bg-muted px-2 py-1 rounded text-sm font-mono">$1</code>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">$1</a>')
+      // Lists
+      .replace(/^\- (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
+      .replace(/^(\d+)\. (.*$)/gm, '<li class="ml-4 mb-1">$1. $2</li>')
+      // Line breaks and paragraphs
+      .replace(/\n\n/g, '</p><p class="mb-4">')
+      .replace(/\n/g, '<br/>')
+      // Wrap in paragraphs
+      .replace(/^(?!<[h|l|p|c])(.+)$/gm, '<p class="mb-4">$1</p>')
+      // Clean up empty paragraphs
+      .replace(/<p class="mb-4"><\/p>/g, '');
   };
 
   if (isLoading) {
@@ -411,13 +442,54 @@ export default function AdminProducts() {
                   </p>
 
                   <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      {...form.register('description')}
-                      placeholder="Advanced code generation and debugging assistant powered by Claude AI..."
-                      rows={4}
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowDescriptionPreview(!showDescriptionPreview)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        {showDescriptionPreview ? 'Edit' : 'Preview'}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Supports Markdown formatting (headings, lists, links, **bold**, *italic*, etc.)
+                    </p>
+                    
+                    {showDescriptionPreview ? (
+                      <div className="min-h-[200px] p-4 border rounded-md bg-background">
+                        <div className="prose prose-neutral dark:prose-invert max-w-none">
+                          <div 
+                            className="text-muted-foreground leading-relaxed"
+                            dangerouslySetInnerHTML={{ 
+                              __html: renderMarkdown(form.watch('description') || '') 
+                            }}
+                          />
+                        </div>
+                        {!form.watch('description') && (
+                          <p className="text-muted-foreground italic">Enter description to see preview...</p>
+                        )}
+                      </div>
+                    ) : (
+                      <Textarea
+                        id="description"
+                        {...form.register('description')}
+                        placeholder="## Overview
+Advanced code generation and debugging assistant powered by Claude AI.
+
+### Features
+- **Intelligent Code Generation**: Creates high-quality code from natural language
+- **Bug Detection**: Identifies and fixes issues automatically
+- **Multi-language Support**: Works with Python, JavaScript, TypeScript, and more
+
+[Learn more](https://example.com) about our AI-powered development tools."
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

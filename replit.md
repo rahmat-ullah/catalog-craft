@@ -36,6 +36,7 @@ The application features a dynamic navigation management system that allows admi
 - **Styling**: Tailwind CSS with custom glassmorphism design system
 - **State Management**: TanStack Query for API data fetching and caching
 - **Build Tool**: Vite with custom configuration for development and production
+- **Markdown Support**: Built-in markdown renderer for rich product descriptions and file content
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
@@ -50,10 +51,10 @@ The application uses PostgreSQL with the following main entities:
 - **Users**: Authentication and profile management
 - **Domains**: Top-level categorization (e.g., AI Tools, Platforms)
 - **Categories**: Subcategories within domains
-- **Products**: Individual resources/tools with rich metadata
+- **Products**: Individual resources/tools with rich metadata and markdown descriptions
 - **Blog Posts**: Content management with categories
 - **Sessions**: Server-side session storage for authentication
-- **Attachments**: File management for uploaded content
+- **Attachments**: File management for uploaded PDF and Markdown content with preview capabilities
 
 ### Authentication System
 - **Provider**: Custom Local Authentication with bcrypt password hashing
