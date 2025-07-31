@@ -64,7 +64,7 @@ export default function AdminProducts() {
     queryKey: ['/api/domains', 'categories'],
     queryFn: async () => {
       if (!domains) return [];
-      const categoriesPromises = domains.map(async (domain: any) => {
+      const categoriesPromises = (domains as any[]).map(async (domain: any) => {
         const response = await fetch(`/api/domains/${domain.id}/categories`);
         const domainCategories = await response.json();
         return domainCategories.map((cat: any) => ({ 
@@ -131,21 +131,7 @@ export default function AdminProducts() {
         title: "Success",
         description: "Product created successfully",
       });
-      setIsDialogOpen(false);
-      form.reset({
-        categoryId: "",
-        name: "",
-        slug: "",
-        subtitle: "",
-        description: "",
-        thumbnail: "",
-        author: "Rahmat Ullah",
-        tags: "",
-        rating: 0,
-        downloadCount: 0,
-        isFeatured: false,
-        isActive: true,
-      });
+      resetForm();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -183,22 +169,7 @@ export default function AdminProducts() {
         title: "Success",
         description: "Product updated successfully",
       });
-      setIsDialogOpen(false);
-      setEditingProduct(null);
-      form.reset({
-        categoryId: "",
-        name: "",
-        slug: "",
-        subtitle: "",
-        description: "",
-        thumbnail: "",
-        author: "Rahmat Ullah",
-        tags: "",
-        rating: 0,
-        downloadCount: 0,
-        isFeatured: false,
-        isActive: true,
-      });
+      resetForm();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -266,7 +237,7 @@ export default function AdminProducts() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     form.reset({
       categoryId: product.categoryId,
@@ -281,12 +252,19 @@ export default function AdminProducts() {
       isFeatured: product.isFeatured || false,
       isActive: product.isActive ?? true,
     });
-    // Load existing attachments if editing
-    if ((product as any).attachments) {
-      setAttachments((product as any).attachments);
-    } else {
+    
+    // Fetch attachments for this product
+    try {
+      const response = await fetch(`/api/products/${product.slug}`);
+      if (response.ok) {
+        const productWithAttachments = await response.json();
+        setAttachments(productWithAttachments.attachments || []);
+      }
+    } catch (error) {
+      console.error("Error fetching product attachments:", error);
       setAttachments([]);
     }
+    
     setIsDialogOpen(true);
   };
 
@@ -302,6 +280,26 @@ export default function AdminProducts() {
     } else {
       createMutation.mutate(data);
     }
+  };
+
+  const resetForm = () => {
+    form.reset({
+      categoryId: "",
+      name: "",
+      slug: "",
+      subtitle: "",
+      description: "",
+      thumbnail: "",
+      author: "Rahmat Ullah",
+      tags: "",
+      rating: 0,
+      downloadCount: 0,
+      isFeatured: false,
+      isActive: true,
+    });
+    setAttachments([]);
+    setEditingProduct(null);
+    setIsDialogOpen(false);
   };
 
   if (isLoading) {
@@ -359,7 +357,7 @@ export default function AdminProducts() {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {allCategories?.map((category) => (
+                          {allCategories?.map((category: any) => (
                             <SelectItem key={category.id} value={category.id}>
                               {(category as any).displayName}
                             </SelectItem>
@@ -471,7 +469,7 @@ export default function AdminProducts() {
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="isFeatured"
-                        checked={form.watch('isFeatured')}
+                        checked={form.watch('isFeatured') || false}
                         onCheckedChange={(checked) => form.setValue('isFeatured', checked)}
                       />
                       <Label htmlFor="isFeatured">Featured</Label>
@@ -480,23 +478,38 @@ export default function AdminProducts() {
                     <div className="flex items-center space-x-2">
                       <Switch
                         id="isActive"
-                        checked={form.watch('isActive')}
+                        checked={form.watch('isActive') || false}
                         onCheckedChange={(checked) => form.setValue('isActive', checked)}
                       />
                       <Label htmlFor="isActive">Active</Label>
                     </div>
                   </div>
 
-                  {/* File Upload Section - only show for existing products */}
-                  {editingProduct && (
-                    <div className="border-t pt-4">
+                  {/* File Upload Section */}
+                  <div className="border-t pt-4">
+                    <Label className="text-base font-semibold">File Attachments</Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {editingProduct 
+                        ? "Upload PDF and Markdown files for this product"
+                        : "You can upload files after creating the product"
+                      }
+                    </p>
+                    
+                    {editingProduct ? (
                       <FileUpload
                         productId={editingProduct.id}
                         attachments={attachments}
                         onAttachmentsChange={setAttachments}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="p-6 border-2 border-dashed border-muted rounded-lg text-center text-muted-foreground">
+                        <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">
+                          File uploads will be available after creating the product
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex gap-2 pt-4">
                     <Button 
@@ -509,7 +522,7 @@ export default function AdminProducts() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => setIsDialogOpen(false)}
+                      onClick={resetForm}
                       className="flex-1"
                     >
                       Cancel
@@ -546,7 +559,7 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => (
+                    {products.map((product: any) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">

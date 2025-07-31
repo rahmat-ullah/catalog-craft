@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,7 +14,7 @@ interface MarkdownViewerProps {
 
 export default function MarkdownViewer({ attachment, open, onOpenChange }: MarkdownViewerProps) {
   const { data: attachmentData, isLoading } = useQuery({
-    queryKey: ['/api/attachments', attachment.id],
+    queryKey: [`/api/attachments/${attachment.id}`],
     enabled: open && attachment.fileType === 'md',
   });
 
@@ -82,11 +82,11 @@ export default function MarkdownViewer({ attachment, open, onOpenChange }: Markd
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ) : attachmentData?.content ? (
+            ) : (attachmentData as any)?.content ? (
               <div 
                 className="prose prose-sm max-w-none dark:prose-invert"
                 dangerouslySetInnerHTML={{ 
-                  __html: renderMarkdown(attachmentData.content) 
+                  __html: renderMarkdown((attachmentData as any).content) 
                 }}
               />
             ) : (

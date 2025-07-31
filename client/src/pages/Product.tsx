@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Star, Download, Calendar, Tag } from "lucide-react";
+import { AlertCircle, Star, Download, Calendar, Tag, FileText, File, Eye } from "lucide-react";
+import MarkdownViewer from "@/components/MarkdownViewer";
+import { useState } from "react";
 
 export default function Product() {
   const { slug } = useParams();
+  const [viewerAttachment, setViewerAttachment] = useState<any>(null);
   
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${slug}`],
@@ -141,24 +144,61 @@ export default function Product() {
               {product.attachments && product.attachments.length > 0 && (
                 <Card className="glass-card">
                   <CardContent className="p-8">
-                    <h2 className="text-2xl font-bold mb-4">Downloads</h2>
-                    <div className="space-y-3">
-                      {product.attachments.map((attachment) => (
-                        <div key={attachment.id} className="flex items-center justify-between p-4 glass rounded-lg">
-                          <div>
-                            <div className="font-medium">{attachment.originalName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {(attachment.size / 1024 / 1024).toFixed(1)} MB • {attachment.mimeType}
+                    <h2 className="text-2xl font-bold mb-6">Downloads & Resources</h2>
+                    <div className="space-y-4">
+                      {product.attachments.map((attachment: any) => {
+                        const getFileIcon = (fileType: string) => {
+                          return fileType === 'pdf' ? 
+                            <File className="w-5 h-5 text-red-500" /> : 
+                            <FileText className="w-5 h-5 text-blue-500" />;
+                        };
+
+                        const formatFileSize = (bytes: number) => {
+                          if (bytes === 0) return '0 Bytes';
+                          const k = 1024;
+                          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                          const i = Math.floor(Math.log(bytes) / Math.log(k));
+                          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                        };
+
+                        return (
+                          <div key={attachment.id} className="flex items-center justify-between p-6 glass-card rounded-xl border">
+                            <div className="flex items-start gap-4">
+                              {getFileIcon(attachment.fileType)}
+                              <div>
+                                <div className="font-semibold text-lg">{attachment.originalName}</div>
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {formatFileSize(attachment.size)} • {attachment.fileType?.toUpperCase()} File
+                                </div>
+                                {attachment.fileType === 'md' && attachment.content && (
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    Click "View" to read the markdown content
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {attachment.fileType === 'md' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setViewerAttachment(attachment)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  View
+                                </Button>
+                              )}
+                              <Button asChild>
+                                <a href={`/api/attachments/${attachment.id}/download`} download>
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download
+                                </a>
+                              </Button>
                             </div>
                           </div>
-                          <Button asChild size="sm">
-                            <a href={`/api/attachments/${attachment.id}/download`} download>
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </a>
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -218,6 +258,15 @@ export default function Product() {
               )}
             </div>
           </div>
+
+          {/* Markdown Viewer */}
+          {viewerAttachment && (
+            <MarkdownViewer
+              attachment={viewerAttachment}
+              open={!!viewerAttachment}
+              onOpenChange={(open) => !open && setViewerAttachment(null)}
+            />
+          )}
         </div>
       </div>
     </Layout>
