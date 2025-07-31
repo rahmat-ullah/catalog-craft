@@ -47,7 +47,7 @@ export default function NavigationManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertNavigationItem) => {
-      return await apiRequest('/api/navigation', 'POST', data);
+      return await apiRequest('POST', '/api/navigation', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/navigation'] });
@@ -68,7 +68,7 @@ export default function NavigationManagement() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<InsertNavigationItem> }) => {
-      return await apiRequest(`/api/navigation/${id}`, 'PUT', data);
+      return await apiRequest('PUT', `/api/navigation/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/navigation'] });
@@ -90,7 +90,7 @@ export default function NavigationManagement() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/navigation/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/navigation/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/navigation'] });
@@ -110,7 +110,7 @@ export default function NavigationManagement() {
 
   const reorderMutation = useMutation({
     mutationFn: async (items: { id: string; position: number }[]) => {
-      return await apiRequest('/api/navigation/reorder', 'POST', { items });
+      return await apiRequest('POST', '/api/navigation/reorder', { items });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/navigation'] });
