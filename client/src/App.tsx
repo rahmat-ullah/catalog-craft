@@ -22,7 +22,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminNavigation from "@/pages/admin/Navigation";
 import Login from "@/pages/Login";
 
-function Router() {
+function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
@@ -65,7 +65,7 @@ function App() {
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AppContent />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
