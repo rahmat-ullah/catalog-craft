@@ -189,6 +189,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Category routes
+  app.get('/api/categories', async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
   app.get('/api/domains/:domainId/categories', async (req, res) => {
     try {
       const categories = await storage.getCategories(req.params.domainId);
@@ -213,6 +223,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product routes
+  app.get('/api/products', async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
   app.get('/api/categories/:categoryId/products', async (req, res) => {
     try {
       const products = await storage.getProducts(req.params.categoryId);

@@ -20,6 +20,11 @@ export default function Tools() {
     queryKey: ['/api/categories'],
   });
 
+  // Debug logging - remove these lines after testing
+  // console.log("Products data:", products);
+  // console.log("Products length:", products.length);
+  // console.log("Categories data:", categories);
+
   // Filter products based on search and category
   const filteredProducts = (products as any[]).filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,6 +35,8 @@ export default function Tools() {
     
     return matchesSearch && matchesCategory;
   });
+
+  // console.log("Filtered products length:", filteredProducts.length);
 
   return (
     <Layout>
