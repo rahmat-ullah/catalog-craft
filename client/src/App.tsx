@@ -13,6 +13,7 @@ import Category from "@/pages/Category";
 import Product from "@/pages/Product";
 import Blog from "@/pages/Blog";
 import BlogPost from "@/pages/BlogPost";
+import Tools from "@/pages/Tools";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminDomains from "@/pages/admin/Domains";
 import AdminCategories from "@/pages/admin/Categories";
@@ -34,6 +35,7 @@ function AppContent() {
           <Route path="/domain/:slug" component={Domain} />
           <Route path="/category/:slug" component={Category} />
           <Route path="/product/:slug" component={Product} />
+          <Route path="/tools" component={Tools} />
           <Route path="/blog" component={Blog} />
           <Route path="/blog/:slug" component={BlogPost} />
         </>
@@ -43,6 +45,7 @@ function AppContent() {
           <Route path="/domain/:slug" component={Domain} />
           <Route path="/category/:slug" component={Category} />
           <Route path="/product/:slug" component={Product} />
+          <Route path="/tools" component={Tools} />
           <Route path="/blog" component={Blog} />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/admin" component={AdminDashboard} />
