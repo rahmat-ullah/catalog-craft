@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { Search, Moon, Sun, Menu, X, Brain, User, LogOut } from "lucide-react";
 import {
   DropdownMenu,
@@ -13,6 +14,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import * as Icons from "lucide-react";
+
+function DynamicNavigation({ location, isMobile = false }: { location: string; isMobile?: boolean }) {
+  const { data: navItems } = useQuery({
+    queryKey: ['/api/navigation'],
+  });
+
+  if (!navItems) return null;
+
+  const baseClasses = isMobile 
+    ? "block py-2 text-foreground/70 hover:text-foreground"
+    : `transition-colors ${location === '/' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`;
+
+  return (
+    <>
+      {navItems
+        .filter((item: any) => item.isVisible)
+        .map((item: any) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={isMobile ? baseClasses : `transition-colors ${
+              location === item.href
+                ? 'text-primary'
+                : 'text-foreground/70 hover:text-foreground'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+    </>
+  );
+}
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -46,21 +80,7 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className={`transition-colors ${location === '/' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
-              Domains
-            </Link>
-            <Link href="/agents" className={`transition-colors ${location === '/agents' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
-              CLI Agents
-            </Link>
-            <Link href="/mcp" className={`transition-colors ${location === '/mcp' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
-              MCP Servers
-            </Link>
-            <Link href="/tools" className={`transition-colors ${location === '/tools' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
-              Tools
-            </Link>
-            <Link href="/blog" className={`transition-colors ${location === '/blog' ? 'text-primary' : 'text-foreground/70 hover:text-foreground'}`}>
-              Blog
-            </Link>
+            <DynamicNavigation location={location} />
 
             {/* Search */}
             <form onSubmit={handleSearch} className="relative">
@@ -165,21 +185,7 @@ export default function Navigation() {
             </form>
             
             <div className="flex flex-col space-y-2">
-              <Link href="/" className="block py-2 text-foreground/70 hover:text-foreground">
-                Domains
-              </Link>
-              <Link href="/agents" className="block py-2 text-foreground/70 hover:text-foreground">
-                CLI Agents
-              </Link>
-              <Link href="/mcp" className="block py-2 text-foreground/70 hover:text-foreground">
-                MCP Servers
-              </Link>
-              <Link href="/tools" className="block py-2 text-foreground/70 hover:text-foreground">
-                Tools
-              </Link>
-              <Link href="/blog" className="block py-2 text-foreground/70 hover:text-foreground">
-                Blog
-              </Link>
+              <DynamicNavigation location={location} isMobile={true} />
               
               <div className="flex items-center justify-between pt-2">
                 <Button

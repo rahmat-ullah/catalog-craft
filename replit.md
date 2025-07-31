@@ -19,6 +19,14 @@ The application follows a monorepo structure with clear separation between clien
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **State Management**: TanStack Query for server state management
 
+## Dynamic Navigation System
+The application features a dynamic navigation management system that allows administrators to configure menu items without code changes:
+- **Navigation Management**: Admin interface to create, edit, delete, and reorder navigation items
+- **Visual Management**: Drag-and-drop interface with position controls and visibility toggles
+- **Icon Integration**: Integration with Lucide React icons for visual navigation elements
+- **Real-time Updates**: Navigation changes reflect immediately across the application
+- **Responsive Design**: Unified navigation experience across desktop and mobile devices
+
 ## Key Components
 
 ### Frontend Architecture

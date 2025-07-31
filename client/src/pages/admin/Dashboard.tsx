@@ -15,7 +15,8 @@ import {
   Download, 
   TrendingUp,
   Settings,
-  Plus
+  Plus,
+  Navigation
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -241,6 +242,34 @@ export default function AdminDashboard() {
                     <Button size="sm" variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
                       New User
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Navigation className="h-5 w-5 mr-2" />
+                  Navigation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Manage site navigation menu items dynamically
+                </p>
+                <div className="flex gap-2">
+                  <Link href="/admin/navigation">
+                    <Button size="sm">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Manage
+                    </Button>
+                  </Link>
+                  <Link href="/admin/navigation">
+                    <Button size="sm" variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Item
                     </Button>
                   </Link>
                 </div>

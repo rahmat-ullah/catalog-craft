@@ -19,6 +19,7 @@ import AdminCategories from "@/pages/admin/Categories";
 import AdminProducts from "@/pages/admin/Products";
 import AdminBlogPosts from "@/pages/admin/BlogPosts";
 import AdminUsers from "@/pages/admin/Users";
+import AdminNavigation from "@/pages/admin/Navigation";
 import Login from "@/pages/Login";
 
 function Router() {
@@ -50,6 +51,7 @@ function Router() {
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/blog" component={AdminBlogPosts} />
           <Route path="/admin/users" component={AdminUsers} />
+          <Route path="/admin/navigation" component={AdminNavigation} />
         </>
       )}
       <Route component={NotFound} />

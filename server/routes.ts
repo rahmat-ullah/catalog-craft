@@ -7,7 +7,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { getSession, requireAuth, requireAdmin, authenticateUser, hashPassword } from "./auth";
 import { z } from "zod";
-import { loginSchema, insertUserSchema, insertDomainSchema, insertCategorySchema, insertProductSchema, insertBlogCategorySchema, insertBlogPostSchema, UserRole, type User } from "@shared/schema";
+import { loginSchema, insertUserSchema, insertDomainSchema, insertCategorySchema, insertProductSchema, insertBlogCategorySchema, insertBlogPostSchema, insertNavigationItemSchema, UserRole, type User } from "@shared/schema";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -569,6 +569,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating blog post:", error);
       res.status(500).json({ message: "Failed to update blog post" });
+    }
+  });
+
+  // Navigation routes (Admin only)
+  app.get('/api/navigation', async (req, res) => {
+    try {
+      const items = await storage.getNavigationItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching navigation items:", error);
+      res.status(500).json({ message: "Failed to fetch navigation items" });
+    }
+  });
+
+  app.post('/api/navigation', requireAdmin, async (req, res) => {
+    try {
+      const validatedData = insertNavigationItemSchema.parse(req.body);
+      const item = await storage.createNavigationItem(validatedData);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating navigation item:", error);
+      res.status(400).json({ message: "Failed to create navigation item" });
+    }
+  });
+
+  app.put('/api/navigation/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertNavigationItemSchema.partial().parse(req.body);
+      const item = await storage.updateNavigationItem(id, validatedData);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating navigation item:", error);
+      res.status(400).json({ message: "Failed to update navigation item" });
+    }
+  });
+
+  app.delete('/api/navigation/:id', requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteNavigationItem(id);
+      res.json({ message: "Navigation item deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting navigation item:", error);
+      res.status(400).json({ message: "Failed to delete navigation item" });
+    }
+  });
+
+  app.post('/api/navigation/reorder', requireAdmin, async (req, res) => {
+    try {
+      const { items } = req.body;
+      await storage.reorderNavigationItems(items);
+      res.json({ message: "Navigation items reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering navigation items:", error);
+      res.status(400).json({ message: "Failed to reorder navigation items" });
     }
   });
 

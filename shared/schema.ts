@@ -190,6 +190,28 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Navigation items table for dynamic navigation management
+export const navigationItems = pgTable("navigation_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  label: varchar("label", { length: 100 }).notNull(),
+  href: varchar("href", { length: 255 }).notNull(),
+  position: integer("position").notNull().default(0),
+  isVisible: boolean("is_visible").notNull().default(true),
+  icon: varchar("icon", { length: 50 }), // Lucide icon name
+  description: varchar("description", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNavigationItemSchema = createInsertSchema(navigationItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type NavigationItem = typeof navigationItems.$inferSelect;
+export type InsertNavigationItem = z.infer<typeof insertNavigationItemSchema>;
+
 export type InsertDomain = z.infer<typeof insertDomainSchema>;
 export type Domain = typeof domains.$inferSelect;
 

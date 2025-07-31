@@ -6,6 +6,7 @@ import {
   attachments,
   blogCategories,
   blogPosts,
+  navigationItems,
   type User,
   type UpsertUser,
   type Domain,
@@ -20,6 +21,8 @@ import {
   type InsertBlogCategory,
   type BlogPost,
   type InsertBlogPost,
+  type NavigationItem,
+  type InsertNavigationItem,
 } from "@shared/schema";
 import { generateSlug } from "@shared/utils";
 import { randomUUID } from "crypto";
@@ -77,6 +80,14 @@ export interface IStorage {
   updateBlogPost(id: string, post: Partial<InsertBlogPost>): Promise<BlogPost>;
   deleteBlogPost(id: string): Promise<void>;
 
+  // Navigation operations
+  getNavigationItems(): Promise<NavigationItem[]>;
+  getNavigationItem(id: string): Promise<NavigationItem | undefined>;
+  createNavigationItem(item: InsertNavigationItem): Promise<NavigationItem>;
+  updateNavigationItem(id: string, item: Partial<InsertNavigationItem>): Promise<NavigationItem>;
+  deleteNavigationItem(id: string): Promise<void>;
+  reorderNavigationItems(items: { id: string; position: number }[]): Promise<void>;
+
   // Stats
   getStats(): Promise<{
     domains: number;
@@ -94,10 +105,12 @@ export class MemStorage implements IStorage {
   private attachments: Map<string, Attachment> = new Map();
   private blogCategories: Map<string, BlogCategory> = new Map();
   private blogPosts: Map<string, BlogPost> = new Map();
+  private navigationItems: Map<string, NavigationItem> = new Map();
 
   constructor() {
     this.initializeSampleData();
     this.initializeDefaultAdmin();
+    this.initializeDefaultNavigation();
   }
 
   private async initializeDefaultAdmin() {
@@ -118,6 +131,70 @@ export class MemStorage implements IStorage {
         isActive: true,
       });
     }
+  }
+
+  private initializeDefaultNavigation() {
+    const defaultNavItems = [
+      {
+        id: "nav-1",
+        label: "Domains",
+        href: "/",
+        position: 1,
+        isVisible: true,
+        icon: "Globe",
+        description: "Browse all domains",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "nav-2", 
+        label: "CLI Agents",
+        href: "/agents",
+        position: 2,
+        isVisible: true,
+        icon: "Terminal",
+        description: "Claude CLI agents",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "nav-3",
+        label: "MCP Servers", 
+        href: "/mcp",
+        position: 3,
+        isVisible: true,
+        icon: "Server",
+        description: "Model Context Protocol servers",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "nav-4",
+        label: "Tools",
+        href: "/tools", 
+        position: 4,
+        isVisible: true,
+        icon: "Wrench",
+        description: "Development tools",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "nav-5",
+        label: "Blog",
+        href: "/blog",
+        position: 5,
+        isVisible: true,
+        icon: "BookOpen",
+        description: "Latest news and tutorials",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    ];
+
+    defaultNavItems.forEach(item => {
+      this.navigationItems.set(item.id, item);
+    });
   }
 
   private initializeSampleData() {
@@ -635,6 +712,61 @@ export class MemStorage implements IStorage {
 
   async deleteBlogPost(id: string): Promise<void> {
     this.blogPosts.delete(id);
+  }
+
+  // Navigation operations
+  async getNavigationItems(): Promise<NavigationItem[]> {
+    return Array.from(this.navigationItems.values())
+      .sort((a, b) => a.position - b.position);
+  }
+
+  async getNavigationItem(id: string): Promise<NavigationItem | undefined> {
+    return this.navigationItems.get(id);
+  }
+
+  async createNavigationItem(itemData: InsertNavigationItem): Promise<NavigationItem> {
+    const id = randomUUID();
+    const item: NavigationItem = {
+      id,
+      label: itemData.label,
+      href: itemData.href,
+      position: itemData.position || 0,
+      isVisible: itemData.isVisible ?? true,
+      icon: itemData.icon || null,
+      description: itemData.description || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.navigationItems.set(id, item);
+    return item;
+  }
+
+  async updateNavigationItem(id: string, itemData: Partial<InsertNavigationItem>): Promise<NavigationItem> {
+    const existing = this.navigationItems.get(id);
+    if (!existing) throw new Error("Navigation item not found");
+    
+    const updated: NavigationItem = {
+      ...existing,
+      ...itemData,
+      updatedAt: new Date(),
+    };
+    this.navigationItems.set(id, updated);
+    return updated;
+  }
+
+  async deleteNavigationItem(id: string): Promise<void> {
+    this.navigationItems.delete(id);
+  }
+
+  async reorderNavigationItems(items: { id: string; position: number }[]): Promise<void> {
+    for (const { id, position } of items) {
+      const item = this.navigationItems.get(id);
+      if (item) {
+        item.position = position;
+        item.updatedAt = new Date();
+        this.navigationItems.set(id, item);
+      }
+    }
   }
 
   // Stats
