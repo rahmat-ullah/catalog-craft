@@ -9,6 +9,36 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Simple markdown renderer component
+function MarkdownRenderer({ content }: { content: string }) {
+  // Convert markdown to JSX
+  const renderMarkdown = (text: string) => {
+    // Bold text
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic text
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Inline code
+    text = text.replace(/`(.*?)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm">$1</code>');
+    
+    // Line breaks
+    text = text.replace(/\n/g, '<br />');
+    
+    // Bullet points
+    text = text.replace(/^- (.*)/gm, '• $1');
+    
+    return text;
+  };
+
+  return (
+    <div 
+      className="prose prose-sm max-w-none dark:prose-invert"
+      dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+    />
+  );
+}
+
 interface ChatMessage {
   id: string;
   type: 'user' | 'bot';
@@ -205,7 +235,11 @@ export default function Chatbot() {
                           ? 'bg-blue-600 text-white ml-auto'
                           : 'bg-muted'
                       }`}>
-                        {message.content}
+                        {message.type === 'bot' ? (
+                          <MarkdownRenderer content={message.content} />
+                        ) : (
+                          message.content
+                        )}
                       </div>
                     </div>
                   ))}
