@@ -80,7 +80,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? <Skeleton className="h-8 w-16" /> : stats?.domains || 0}
+                  {statsLoading ? <Skeleton className="h-8 w-16" /> : (stats as any)?.domains || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Organized collections
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? <Skeleton className="h-8 w-16" /> : stats?.categories || 0}
+                  {statsLoading ? <Skeleton className="h-8 w-16" /> : (stats as any)?.categories || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Resource categories
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? <Skeleton className="h-8 w-16" /> : stats?.products || 0}
+                  {statsLoading ? <Skeleton className="h-8 w-16" /> : (stats as any)?.products || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Available resources
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {statsLoading ? <Skeleton className="h-8 w-16" /> : `${Math.round((stats?.downloads || 0) / 1000 * 10) / 10}k`}
+                  {statsLoading ? <Skeleton className="h-8 w-16" /> : `${Math.round(((stats as any)?.downloads || 0) / 1000 * 10) / 10}k`}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total downloads

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertNavigationItemSchema } from "@shared/schema";
 import type { NavigationItem, InsertNavigationItem } from "@shared/schema";
 import { z } from "zod";
-import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown, Globe } from "lucide-react";
 import * as Icons from "lucide-react";
 
 // Available Lucide icons for navigation
@@ -132,7 +133,7 @@ export default function NavigationManagement() {
     defaultValues: {
       label: "",
       href: "",
-      position: navigationItems?.length || 0,
+      position: Array.isArray(navigationItems) ? navigationItems.length : 0,
       isVisible: true,
       icon: "Globe",
       description: "",
@@ -178,7 +179,7 @@ export default function NavigationManagement() {
   };
 
   const moveItem = (item: NavigationItem, direction: 'up' | 'down') => {
-    if (!navigationItems) return;
+    if (!Array.isArray(navigationItems)) return;
     
     const currentIndex = navigationItems.findIndex((nav: NavigationItem) => nav.id === item.id);
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -206,7 +207,9 @@ export default function NavigationManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <Layout>
+      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Navigation Management</h1>
@@ -266,7 +269,7 @@ export default function NavigationManagement() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Icon</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || "Globe"}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select an icon" />
@@ -295,7 +298,7 @@ export default function NavigationManagement() {
                     <FormItem>
                       <FormLabel>Description (Optional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Brief description of this page" {...field} />
+                        <Input placeholder="Brief description of this page" {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -361,7 +364,7 @@ export default function NavigationManagement() {
       </div>
 
       <div className="grid gap-4">
-        {navigationItems?.map((item: NavigationItem, index: number) => (
+        {Array.isArray(navigationItems) && navigationItems.map((item: NavigationItem, index: number) => (
           <Card key={item.id} className="glass-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -383,7 +386,7 @@ export default function NavigationManagement() {
                         size="icon"
                         className="h-6 w-6"
                         onClick={() => moveItem(item, 'down')}
-                        disabled={index === navigationItems.length - 1}
+                        disabled={index === (Array.isArray(navigationItems) ? navigationItems.length - 1 : 0)}
                       >
                         <ArrowDown className="h-3 w-3" />
                       </Button>
@@ -502,7 +505,7 @@ export default function NavigationManagement() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Icon</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || "Globe"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an icon" />
@@ -531,7 +534,7 @@ export default function NavigationManagement() {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Brief description of this page" {...field} />
+                      <Input placeholder="Brief description of this page" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -594,6 +597,8 @@ export default function NavigationManagement() {
           </Form>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </div>
+    </Layout>
   );
 }
