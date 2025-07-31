@@ -21,6 +21,7 @@ import AdminProducts from "@/pages/admin/Products";
 import AdminBlogPosts from "@/pages/admin/BlogPosts";
 import AdminUsers from "@/pages/admin/Users";
 import AdminNavigation from "@/pages/admin/Navigation";
+import Chatbot from "@/components/Chatbot";
 import Login from "@/pages/Login";
 
 function AppContent() {
@@ -69,6 +70,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <AppContent />
+          <Chatbot />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

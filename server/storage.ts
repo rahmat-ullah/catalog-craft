@@ -7,6 +7,7 @@ import {
   blogCategories,
   blogPosts,
   navigationItems,
+  chatSessions,
   type User,
   type UpsertUser,
   type Domain,
@@ -23,6 +24,8 @@ import {
   type InsertBlogPost,
   type NavigationItem,
   type InsertNavigationItem,
+  type ChatSession,
+  type InsertChatSession,
 } from "@shared/schema";
 import { generateSlug } from "@shared/utils";
 import { randomUUID } from "crypto";
@@ -95,6 +98,10 @@ export interface IStorage {
     products: number;
     downloads: number;
   }>;
+
+  // Chat Sessions
+  createChatSession(session: InsertChatSession): Promise<ChatSession>;
+  getChatSessionsForDevice(deviceId: string, startDate: Date, endDate: Date): Promise<ChatSession[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -106,6 +113,7 @@ export class MemStorage implements IStorage {
   private blogCategories: Map<string, BlogCategory> = new Map();
   private blogPosts: Map<string, BlogPost> = new Map();
   private navigationItems: Map<string, NavigationItem> = new Map();
+  private chatSessions: Map<string, ChatSession> = new Map();
 
   constructor() {
     this.initializeSampleData();
@@ -1101,6 +1109,28 @@ Professional application performance monitoring and optimization tool with AI-po
     const downloads = Array.from(this.products.values()).reduce((sum, p) => sum + (p.downloadCount || 0), 0);
     
     return { domains, categories, products, downloads };
+  }
+
+  // Chat Sessions
+  async createChatSession(sessionData: InsertChatSession): Promise<ChatSession> {
+    const id = randomUUID();
+    const session: ChatSession = {
+      id,
+      deviceId: sessionData.deviceId,
+      question: sessionData.question,
+      response: sessionData.response,
+      createdAt: new Date(),
+    };
+    this.chatSessions.set(id, session);
+    return session;
+  }
+
+  async getChatSessionsForDevice(deviceId: string, startDate: Date, endDate: Date): Promise<ChatSession[]> {
+    return Array.from(this.chatSessions.values()).filter(session =>
+      session.deviceId === deviceId &&
+      session.createdAt && session.createdAt >= startDate &&
+      session.createdAt && session.createdAt < endDate
+    );
   }
 }
 

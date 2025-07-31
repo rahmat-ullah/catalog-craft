@@ -320,6 +320,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chatbot routes
+  app.get('/api/chatbot/questions', async (req, res) => {
+    try {
+      const { predefinedQuestions } = await import('./chatbot');
+      res.json({ questions: predefinedQuestions });
+    } catch (error) {
+      console.error("Error fetching predefined questions:", error);
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
+  });
+
+  app.get('/api/chatbot/remaining/:deviceId', async (req, res) => {
+    try {
+      const { getRemainingQuestions } = await import('./chatbot');
+      const remaining = await getRemainingQuestions(req.params.deviceId);
+      res.json({ remaining });
+    } catch (error) {
+      console.error("Error checking remaining questions:", error);
+      res.status(500).json({ message: "Failed to check remaining questions" });
+    }
+  });
+
+  app.post('/api/chatbot/ask', async (req, res) => {
+    try {
+      const { question, deviceId } = req.body;
+      
+      if (!question || !deviceId) {
+        return res.status(400).json({ message: "Question and deviceId are required" });
+      }
+
+      const { checkRateLimit, generateChatResponse } = await import('./chatbot');
+      
+      // Check rate limit
+      const canAsk = await checkRateLimit(deviceId);
+      if (!canAsk) {
+        return res.status(429).json({ 
+          message: "Daily question limit reached. You can ask 5 questions per day.",
+          remaining: 0
+        });
+      }
+
+      // Generate response
+      const response = await generateChatResponse(question);
+      
+      // Save chat session
+      await storage.createChatSession({
+        deviceId,
+        question,
+        response,
+      });
+
+      // Get remaining questions
+      const { getRemainingQuestions } = await import('./chatbot');
+      const remaining = await getRemainingQuestions(deviceId);
+
+      res.json({ response, remaining });
+    } catch (error) {
+      console.error("Error processing chat request:", error);
+      res.status(500).json({ message: "Failed to process your question. Please try again." });
+    }
+  });
+
   // Blog routes
   app.get('/api/blog/categories', async (req, res) => {
     try {

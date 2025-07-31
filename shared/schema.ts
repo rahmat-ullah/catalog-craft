@@ -229,3 +229,20 @@ export type BlogCategory = typeof blogCategories.$inferSelect;
 
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+// Chat Sessions table for AI chatbot
+export const chatSessions = pgTable("chat_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  deviceId: varchar("device_id").notNull(), // Browser fingerprint or session ID
+  question: varchar("question", { length: 1000 }).notNull(),
+  response: varchar("response", { length: 2000 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertChatSessionSchema = createInsertSchema(chatSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
