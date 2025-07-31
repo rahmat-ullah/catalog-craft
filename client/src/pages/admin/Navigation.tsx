@@ -10,6 +10,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertNavigationItemSchema } from "@shared/schema";
 import type { NavigationItem, InsertNavigationItem } from "@shared/schema";
 import { z } from "zod";
-import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff, ArrowUp, ArrowDown, Globe, Settings, Menu, Link, Info } from "lucide-react";
 import * as Icons from "lucide-react";
 
 // Available Lucide icons for navigation
@@ -196,6 +198,8 @@ export default function NavigationManagement() {
     reorderMutation.mutate(reorderedItems);
   };
 
+
+
   const renderIcon = (iconName: string | null) => {
     if (!iconName) return <Globe className="h-4 w-4" />;
     const IconComponent = (Icons as any)[iconName];
@@ -203,7 +207,43 @@ export default function NavigationManagement() {
   };
 
   if (isLoading) {
-    return <div className="p-6">Loading navigation items...</div>;
+    return (
+      <Layout>
+        <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-8 w-8" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-4 w-96" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="glass-card">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <Skeleton className="h-6 w-6" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-5 w-32" />
+                          <Skeleton className="h-4 w-48" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
@@ -211,18 +251,23 @@ export default function NavigationManagement() {
       <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Navigation Management</h1>
-          <p className="text-muted-foreground">
-            Manage navigation menu items that appear in the site header
-          </p>
+        <div className="flex items-center space-x-4">
+          <div className="p-3 rounded-xl gradient-bg">
+            <Menu className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Navigation Management</h1>
+            <p className="text-muted-foreground">
+              Manage navigation menu items that appear in the site header
+            </p>
+          </div>
         </div>
         
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-bg">
+            <Button className="gradient-bg hover:opacity-90 transition-opacity shadow-lg">
               <Plus className="h-4 w-4 mr-2" />
-              Add Navigation Item
+              Add Menu Item
             </Button>
           </DialogTrigger>
           <DialogContent className="glass max-w-md">
@@ -363,100 +408,186 @@ export default function NavigationManagement() {
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {Array.isArray(navigationItems) && navigationItems.map((item: NavigationItem, index: number) => (
-          <Card key={item.id} className="glass-card">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col space-y-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => moveItem(item, 'up')}
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => moveItem(item, 'down')}
-                        disabled={index === (Array.isArray(navigationItems) ? navigationItems.length - 1 : 0)}
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    {renderIcon(item.icon)}
-                    <div>
-                      <div className="font-medium">{item.label}</div>
-                      <div className="text-sm text-muted-foreground">{item.href}</div>
-                      {item.description && (
-                        <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Badge variant={item.isVisible ? "default" : "secondary"}>
-                    Position {item.position}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => toggleVisibility(item)}
-                  >
-                    {item.isVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(item)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="glass">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Navigation Item</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{item.label}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+      {!Array.isArray(navigationItems) || navigationItems.length === 0 ? (
+        <Card className="glass-card border-dashed">
+          <CardContent className="p-12 text-center">
+            <div className="space-y-4">
+              <div className="p-4 rounded-full bg-muted/50 mx-auto w-fit">
+                <Menu className="h-8 w-8 text-muted-foreground" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">No navigation items yet</h3>
+                <p className="text-muted-foreground">
+                  Create your first navigation item to get started
+                </p>
+              </div>
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="gradient-bg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Item
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Info className="h-4 w-4" />
+              <span>{navigationItems.length} menu items</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+              <GripVertical className="h-3 w-3" />
+              <span>Use arrows to reorder</span>
+            </div>
+          </div>
+          
+          <div className="grid gap-4">
+            {navigationItems.map((item: NavigationItem, index: number) => (
+              <Card key={item.id} className="glass-card hover:shadow-lg transition-all duration-200 group">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg bg-muted/50 group-hover:bg-primary/10 transition-colors cursor-move">
+                          <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          {renderIcon(item.icon)}
+                        </div>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-3 mb-1">
+                          <span className="font-semibold text-lg">{item.label}</span>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline" className="text-xs">
+                              Position {item.position}
+                            </Badge>
+                            {!item.isVisible && (
+                              <Badge variant="secondary" className="text-xs">
+                                <EyeOff className="h-3 w-3 mr-1" />
+                                Hidden
+                              </Badge>
+                            )}
+                            {item.isVisible && (
+                              <Badge variant="default" className="text-xs bg-green-100 text-green-800 border-green-200">
+                                <Eye className="h-3 w-3 mr-1" />
+                                Visible
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <Link className="h-3 w-3" />
+                          <span className="truncate">{item.href}</span>
+                        </div>
+                        
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleVisibility(item)}
+                        className="h-9 px-3"
+                      >
+                        {item.isVisible ? (
+                          <>
+                            <Eye className="h-4 w-4 mr-1" />
+                            Visible
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-4 w-4 mr-1" />
+                            Hidden
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Separator orientation="vertical" className="h-6" />
+                      
+                      <div className="flex flex-col space-y-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => moveItem(item, 'up')}
+                          disabled={index === 0}
+                          title="Move up"
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => moveItem(item, 'down')}
+                          disabled={index === navigationItems.length - 1}
+                          title="Move down"
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      
+                      <Separator orientation="vertical" className="h-6" />
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(item)}
+                        className="h-9 px-3"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-9 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="glass">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Navigation Item</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{item.label}"? This action cannot be undone and will remove the item from your navigation menu.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate(item.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Item
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
